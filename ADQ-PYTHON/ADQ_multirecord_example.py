@@ -49,7 +49,14 @@ if n_of_ADQ > 0:
 
     # Set clock source
     ADQ_CLOCK_INT_INTREF = 0
-    ADQAPI.ADQ_SetClockSource(adq_cu, adq_num, ADQ_CLOCK_INT_INTREF);
+    ADQ_CLOCK_INT_EXTREF = 1
+    ADQ_CLOCK_EXT = 2
+    ADQ_CLOCK_INT_PXIREF = 3
+    # clock_source = ADQ_CLOCK_INT_EXTREF
+    clock_source = ADQ_CLOCK_INT_INTREF
+    success = ADQAPI.ADQ_SetClockSource(adq_cu, adq_num, clock_source)
+    if (success == 0):
+        print('ADQ_SetClockSource failed.')
 
     ##########################
     # Test pattern
@@ -58,35 +65,21 @@ if n_of_ADQ > 0:
     # Sample skip
     #ADQAPI.ADQ_SetSampleSkip(adq_cu, adq_num, 1)
     ##########################
-    
+
     # Set trig mode
     SW_TRIG = 1
-    EXT_TRIG_1 = 2
-    EXT_TRIG_2 = 7
-    EXT_TRIG_3 = 8
+    EXT_TRIG = 2
     LVL_TRIG = 3
     INT_TRIG = 4
-    LVL_FALLING = 0
-    LVL_RISING = 1
-    trigger = LVL_TRIG
+    EXT_SYNC = 9
+    # trigger = EXT_TRIG
+    trigger = SW_TRIG
     success = ADQAPI.ADQ_SetTriggerMode(adq_cu, adq_num, trigger)
     if (success == 0):
         print('ADQ_SetTriggerMode failed.')
-    success = ADQAPI.ADQ_SetLvlTrigLevel(adq_cu, adq_num, -100)
-    if (success == 0):
-        print('ADQ_SetLvlTrigLevel failed.')    
-    success = ADQAPI.ADQ_SetTrigLevelResetValue(adq_cu, adq_num, 1000)
-    if (success == 0):
-        print('ADQ_SetTrigLevelResetValue failed.')    
-    success = ADQAPI.ADQ_SetLvlTrigChannel(adq_cu, adq_num, 1)
-    if (success == 0):
-        print('ADQ_SetLvlTrigChannel failed.')    
-    success = ADQAPI.ADQ_SetLvlTrigEdge(adq_cu, adq_num, LVL_RISING)
-    if (success == 0):
-        print('ADQ_SetLvlTrigEdge failed.')
-        
+
     number_of_records = 1
-    samples_per_record = 16384
+    samples_per_record = 20000
         
     # Start acquisition
     ADQAPI.ADQ_MultiRecordSetup(adq_cu, adq_num,
@@ -101,14 +94,16 @@ if n_of_ADQ > 0:
         print('Waiting for trigger')
 
     # Setup target buffers for data
-    max_number_of_channels = 4
+    nof_channels = ADQAPI.ADQ_GetNofChannels(adq_cu, adq_num)
+    print('Number of channels:  {}'.format(nof_channels))
+    max_number_of_channels = 2
     target_buffers=(ct.POINTER(ct.c_int16*samples_per_record*number_of_records)*max_number_of_channels)()
     for bufp in target_buffers:
         bufp.contents = (ct.c_int16*samples_per_record*number_of_records)()
 
     # Get data from ADQ
     ADQ_TRANSFER_MODE_NORMAL = 0
-    ADQ_CHANNELS_MASK = 0xF
+    ADQ_CHANNELS_MASK = 0xFF
     status = ADQAPI.ADQ_GetData(adq_cu, adq_num, target_buffers,
                                 samples_per_record*number_of_records, 2,
                                 0, number_of_records, ADQ_CHANNELS_MASK,
@@ -118,8 +113,8 @@ if n_of_ADQ > 0:
     # Re-arrange data in numpy arrays
     data_16bit_ch0 = np.frombuffer(target_buffers[0].contents[0],dtype=np.int16)
     data_16bit_ch1 = np.frombuffer(target_buffers[1].contents[0],dtype=np.int16)
-    data_16bit_ch2 = np.frombuffer(target_buffers[2].contents[0],dtype=np.int16)
-    data_16bit_ch3 = np.frombuffer(target_buffers[3].contents[0],dtype=np.int16)
+    # data_16bit_ch2 = np.frombuffer(target_buffers[2].contents[0],dtype=np.int16)
+    # data_16bit_ch3 = np.frombuffer(target_buffers[3].contents[0],dtype=np.int16)
 
     # Plot data
     if True:
@@ -127,8 +122,8 @@ if n_of_ADQ > 0:
         plt.clf()
         plt.plot(data_16bit_ch0, '.-')
         plt.plot(data_16bit_ch1, '.--')
-        plt.plot(data_16bit_ch2, '.--')
-        plt.plot(data_16bit_ch3, '.--')
+        # plt.plot(data_16bit_ch2, '.--')
+        # plt.plot(data_16bit_ch3, '.--')
         
         plt.show()
 

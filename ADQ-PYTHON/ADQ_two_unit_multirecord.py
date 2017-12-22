@@ -61,8 +61,8 @@ else:
         # Get serial number and product name from ADQ
         serial_number = ADQAPI.ADQ_GetBoardSerialNumber(adq_cu, adq_num)
         product_name = ADQ_GetBoardProductName(adq_cu, adq_num)
-        printf('Board serial number: {}' .format(serial_number))
-        printf("Board product name:  {}\n" .format(product_name))
+        print('Board serial number: {}' .format(serial_number))
+        print("Board product name:  {}\n" .format(product_name))
 
         # Set clock source as Internal clock source, external 10 MHz reference
         ADQ_CLOCK_INT_INTREF = 0
@@ -104,7 +104,8 @@ else:
 
         #  Set Up Collection with MultiRecord
         number_of_records = 1
-        samples_per_record = 1000000000 - 100 # 1G Samples - 100 Samples for header(44 Bytes)
+        #samples_per_record = 1000000000 - 100 # 1G Samples - 100 Samples for header(44 Bytes)
+        samples_per_record = 2 ** 30 - 100  # 1G Samples - 100 Samples for header(44 Bytes)
         ADQAPI.ADQ_MultiRecordSetup(adq_cu, adq_num, number_of_records, samples_per_record)
 
     # Enable Triggers of two ADQ 7
