@@ -78,8 +78,10 @@ if n_of_ADQ > 0:
     if (success == 0):
         print('ADQ_SetTriggerMode failed.')
 
+    #ADQAPI.ADQ_SetSampleSkip(adq_cu, adq_num, 4)
+
     number_of_records = 1
-    samples_per_record = 20000
+    samples_per_record = 1 * 10**6
         
     # Start acquisition
     ADQAPI.ADQ_MultiRecordSetup(adq_cu, adq_num,
@@ -94,17 +96,20 @@ if n_of_ADQ > 0:
         print('Waiting for trigger')
 
     # Setup target buffers for data
-    nof_channels = ADQAPI.ADQ_GetNofChannels(adq_cu, adq_num)
-    print('Number of channels:  {}'.format(nof_channels))
-    max_number_of_channels = 2
+    max_number_of_channels = ADQAPI.ADQ_GetNofChannels(adq_cu, adq_num)
+    print('Number of channels:  {}'.format(max_number_of_channels))
     target_buffers=(ct.POINTER(ct.c_int16*samples_per_record*number_of_records)*max_number_of_channels)()
     for bufp in target_buffers:
         bufp.contents = (ct.c_int16*samples_per_record*number_of_records)()
+    target_timestamps = (ct.POINTER(ct.c_ulonglong)*number_of_records)()
+    for tstampp in target_timestamps:
+        tstampp.contents = (ct.c_ulonglong)()
+
 
     # Get data from ADQ
     ADQ_TRANSFER_MODE_NORMAL = 0
     ADQ_CHANNELS_MASK = 0xFF
-    status = ADQAPI.ADQ_GetData(adq_cu, adq_num, target_buffers,
+    status = ADQAPI.ADQ_GetDataWHTS(adq_cu, adq_num, target_buffers,0,target_timestamps,
                                 samples_per_record*number_of_records, 2,
                                 0, number_of_records, ADQ_CHANNELS_MASK,
                                 0, samples_per_record, ADQ_TRANSFER_MODE_NORMAL);
@@ -112,18 +117,26 @@ if n_of_ADQ > 0:
 
     # Re-arrange data in numpy arrays
     data_16bit_ch0 = np.frombuffer(target_buffers[0].contents[0],dtype=np.int16)
+    print('Data length ch0 is {}'.format(len(data_16bit_ch0)))
     data_16bit_ch1 = np.frombuffer(target_buffers[1].contents[0],dtype=np.int16)
+    print('Data length ch1 is {}'.format(len(data_16bit_ch1)))
     # data_16bit_ch2 = np.frombuffer(target_buffers[2].contents[0],dtype=np.int16)
     # data_16bit_ch3 = np.frombuffer(target_buffers[3].contents[0],dtype=np.int16)
+    tstamp_64bit_rec0 = np.frombuffer(target_timestamps[0].contents[0],dtype=np.ulonglong)
+    print('Timestamp is {}'.format(tstamp_64bit_rec0))
 
     # Plot data
     if True:
+        plt.figure(0)
+        plt.clf()
+        plt.plot(data_16bit_ch0[:500], '.-')
+        #plt.plot(data_16bit_ch1[:1000], '.--')
+
         plt.figure(1)
         plt.clf()
-        plt.plot(data_16bit_ch0, '.-')
-        plt.plot(data_16bit_ch1, '.--')
-        # plt.plot(data_16bit_ch2, '.--')
-        # plt.plot(data_16bit_ch3, '.--')
+        plt.plot(data_16bit_ch0[-500:],'.-')
+        #plt.plot(data_16bit_ch1[-1000:],'.--')
+
         
         plt.show()
 

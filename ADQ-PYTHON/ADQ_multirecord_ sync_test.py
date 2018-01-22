@@ -93,8 +93,7 @@ else:
 
         #  Set Up Collection with MultiRecord
         number_of_records = 1
-        # samples_per_record = 200 * 10**6
-        samples_per_record = 5000
+        samples_per_record = 500 * 10**6
         ADQAPI.ADQ_MultiRecordSetup(adq_cu, adq_num, number_of_records, samples_per_record)
 
     num_devices = 2
