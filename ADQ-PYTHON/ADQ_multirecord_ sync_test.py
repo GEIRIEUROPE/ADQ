@@ -30,7 +30,7 @@ n_of_ADQ  = ADQAPI.ADQControlUnit_NofADQ(adq_cu)
 print('Number of ADQ found:  {}'.format(n_of_ADQ))
 
 if n_of_ADQ < 2:
-    print('Did not find two devices, aborting..')
+    print('Failed to find two devices, aborting..')
 else:
     for adq_num in range(1, 3):
         # Get revision info from ADQ
@@ -62,11 +62,7 @@ else:
         ADQ_CLOCK_EXT = 2
         ADQ_CLOCK_INT_PXIREF = 3
         # clock_source = ADQ_CLOCK_INT_EXTREF  # run internal clock with external reference clock for synchronization
-        if (adq_num == 1):
-            clock_source = ADQ_CLOCK_INT_EXTREF
-            # ADQAPI.ADQ_EnableClockRefOut(adq_cu, adq_num, 1)
-        else:
-            clock_source = ADQ_CLOCK_INT_EXTREF
+        clock_source = ADQ_CLOCK_INT_EXTREF
         success = ADQAPI.ADQ_SetClockSource(adq_cu, adq_num, clock_source)
         if (success == 0):
             print('ADQ_SetClockSource failed.')
